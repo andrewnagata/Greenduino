@@ -1,14 +1,11 @@
 #pragma once
 //
 //  GSerial.h
-//  PoolsnSuch
-//
-//  Created by Andrew Nagata on 6/28/13.
-//
 //
 
-#ifndef __PoolsnSuch__GSerial__
-#define __PoolsnSuch__GSerial__
+
+#ifndef GSerial_H
+#define GSerial_H
 
 #include <iostream>
 #include <termios.h>
@@ -17,7 +14,7 @@
 
 #include "SerialDeviceinfo.h"
 
-#endif /* defined(__PoolsnSuch__GSerial__) */
+#endif /* defined(GSerial_H) */
 
 using namespace std;
 
