@@ -1,9 +1,5 @@
 //
 //  Greenduino.h
-//  PoolsnSuch
-//
-//  Created by Andrew Nagata on 6/28/13.
-//
 //
 /*
  * Copyright 2007-2008 (c) Erik Sjodin, eriksjodin.net
@@ -29,14 +25,16 @@
  * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+ 
+ 
 #pragma once
 
-#ifndef __PoolsnSuch__Greenduino__
-#define __PoolsnSuch__Greenduino__
+#ifndef Greenduino_H
+#define Greenduino_H
 
 #include <iostream>
 
-#endif /* defined(__PoolsnSuch__Greenduino__) */
+#endif /* defined(Greenduino_H) */
 
 #include <list>
 #include <vector>
