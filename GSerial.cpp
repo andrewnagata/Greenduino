@@ -1,8 +1,5 @@
 //
 //  GSerial.cpp
-//  PoolsnSuch
-//
-//  Created by Andrew Nagata on 6/28/13.
 //
 //
 
