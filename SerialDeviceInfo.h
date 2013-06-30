@@ -1,14 +1,10 @@
 #pragma once
 //
 //  SerialDeviceInfo.h
-//  PoolsnSuch
-//
-//  Created by Andrew Nagata on 6/28/13.
-//
 //
 
-#ifndef PoolsnSuch_SerialDeviceInfo_h
-#define PoolsnSuch_SerialDeviceInfo_h
+#ifndef SerialDeviceInfo_h
+#define SerialDeviceInfo_h
 
 
 #endif
