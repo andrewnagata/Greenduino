@@ -1,9 +1,5 @@
 //
 //  Greenduino.cpp
-//  PoolsnSuch
-//
-//  Created by Andrew Nagata on 6/28/13.
-//
 //
 /*
  * 1/9/13:
@@ -48,7 +44,6 @@
 
 #include "Greenduino.h"
 
-// TODO thread it?
 // TODO throw event or exception if the serial port goes down...
 //---------------------------------------------------------------------------
 Greenduino::Greenduino()
