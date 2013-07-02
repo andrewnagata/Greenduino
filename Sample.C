@@ -31,7 +31,6 @@ class App : public Thing
         {
             _greenduino -> sendDigital(13, ARD_LOW);
         }
-        
     }
 
     

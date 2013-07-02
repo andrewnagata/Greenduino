@@ -46,7 +46,7 @@
 
 // TODO throw event or exception if the serial port goes down...
 //---------------------------------------------------------------------------
-Greenduino::Greenduino()
+Greenduino::Greenduino() : Thing()
 {
 	_portStatus=-1;
 	_waitForData=0;
@@ -67,6 +67,7 @@ Greenduino::Greenduino()
 Greenduino::~Greenduino()
 {
 	_port.close();
+    // TODO : DESTROY Thing super?????
 }
 
 // initialize pins once we get the Firmata version back from the Arduino board
@@ -115,8 +116,8 @@ void Greenduino::initPins() {
 }
 
 bool Greenduino::connect(string device, int baud){
-	//connectTime = App::CurTime();
-    connectTime = 0;
+    
+	connectTime = CurTime();
 	_initialized = false;
 	_port.listDevices();
 	connected = _port.setup(device.c_str(), baud);
@@ -127,8 +128,8 @@ bool Greenduino::connect(string device, int baud){
 // the preferred method is to listen for the EInitialized event in your application
 bool Greenduino::isArduinoReady(){
 	if(bUseDelay) {
-		//if (_initialized || (CurTime() - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
-        if (_initialized || (connectTime - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
+		if (_initialized || (CurTime() - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
+        //if (_initialized || (connectTime - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
 			initPins();
 			connected = true;
 		}

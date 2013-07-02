@@ -42,6 +42,9 @@
 #include <iostream>
 
 #include "GSerial.h"
+#include "Thing.h"
+
+using namespace oblong::greenhouse;
 
 /*
  * Version numbers for the protocol. The protocol is still changing, so these
@@ -153,7 +156,7 @@
  **/
 
 
-class Greenduino
+class Greenduino : public Thing
 {
     
 public:
