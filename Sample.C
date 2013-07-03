@@ -10,6 +10,9 @@ class App : public Thing
     App() : Thing()
     {
         ParticipateInPool("arduino");
+        
+        //Pass poolname along inside constructor
+        //can use setPoolName(name) later if desired
         _greenduino = new Greenduino("arduino");
         
         // replace the string below with the serial port for your Arduino board
@@ -34,16 +37,19 @@ class App : public Thing
     
     void Metabolize (const Protein &p)
     {
+        //Arduino is INITIALIZED
         if (HasDescrip (p, "EInitialized"))
         {
-            INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
+            //Set up pin modes
             
             _greenduino -> sendDigitalPinMode(13, ARD_OUTPUT);
             
-            //Analog sensor connected to pin A0 on Arduino
-            _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG);
+            _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG); //Analog sensor connected to pin A0 on Arduino
+            
+            INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
         }
         
+        //A DIGITAL pin has changed value
         if (HasDescrip (p, "EDigitalPinChanged"))
         {
             int64 pin = Ingest <int64> (p, "pin");
@@ -51,6 +57,7 @@ class App : public Thing
             INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
         }
         
+        //An ANALOG pin has changed value
         if (HasDescrip (p, "EAnalogPinChanged"))
         {
             int64 pin = Ingest <int64> (p, "pin");
