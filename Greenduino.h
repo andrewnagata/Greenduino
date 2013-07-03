@@ -143,7 +143,7 @@ using namespace oblong::greenhouse;
 #define SYSEX_SERVO_DETACH                      0x01
 #define SYSEX_SERVO_WRITE                       0x02
 
-#define OF_ARDUINO_DELAY_LENGTH					4.0
+#define G_ARDUINO_DELAY_LENGTH					4.0
 
 #define FIRMWARE2_2								22
 #define FIRMWARE2_3                             23
@@ -162,9 +162,9 @@ class Greenduino : public Thing
 public:
     
     Greenduino();
+    Greenduino(const Str &poolname );
     
     virtual ~Greenduino();
-    
     
     // --- setup functions
     bool connect(string device, int baud = 57600);
@@ -175,7 +175,9 @@ public:
     
     bool isArduinoReady();
     
-    void  setUseDelay(bool bDelay);
+    void setUseDelay(bool bDelay);
+    
+    void setPoolName( const Str &poolname);
     
     void update();
     // polls data from the serial port, this has to be called periodically
@@ -351,6 +353,8 @@ public:
 protected:
     bool _initialized;
     
+    void init();
+    
     void initPins();
     int _totalDigitalPins;
     
@@ -371,6 +375,9 @@ protected:
     
     GSerial _port;
     int _portStatus;
+    
+    // -- the Greenhouse poolname
+    Str _poolname;
     
     // --- history variables
     int _analogHistoryLength;

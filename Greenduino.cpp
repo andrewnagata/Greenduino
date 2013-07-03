@@ -43,12 +43,26 @@
  */
 
 #include "Greenduino.h"
+#include "GreenhouseHeaders.h"
 
 // TODO throw event or exception if the serial port goes down...
 //---------------------------------------------------------------------------
 Greenduino::Greenduino() : Thing()
 {
-	_portStatus=-1;
+    init();
+}
+
+Greenduino::Greenduino(const Str &poolname) : Thing()
+{
+    init();
+    
+    _poolname = poolname;
+    ParticipateInPool(_poolname);
+}
+
+void Greenduino::init()
+{
+    _portStatus=-1;
 	_waitForData=0;
 	_analogHistoryLength = 2;
 	_digitalHistoryLength = 2;
@@ -62,6 +76,7 @@ Greenduino::Greenduino() : Thing()
 	_firmwareName = "Unknown";
     
 	bUseDelay = true;
+
 }
 
 Greenduino::~Greenduino()
@@ -128,8 +143,7 @@ bool Greenduino::connect(string device, int baud){
 // the preferred method is to listen for the EInitialized event in your application
 bool Greenduino::isArduinoReady(){
 	if(bUseDelay) {
-		if (_initialized || (CurTime() - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
-        //if (_initialized || (connectTime - connectTime) > OF_ARDUINO_DELAY_LENGTH) {
+		if (_initialized || (CurTime() - connectTime) > G_ARDUINO_DELAY_LENGTH) {
 			initPins();
 			connected = true;
 		}
@@ -139,6 +153,11 @@ bool Greenduino::isArduinoReady(){
 
 void  Greenduino::setUseDelay(bool bDelay){
 	bUseDelay = bDelay;
+}
+
+void Greenduino::setPoolName( const Str &poolname)
+{
+    _poolname = poolname;
 }
 
 void Greenduino::setDigitalHistoryLength(int length){
@@ -416,11 +435,16 @@ void Greenduino::processData(unsigned char inputData){
 					processDigitalPort(_multiByteChannel, (_storedInputData[0] << 7) | _storedInputData[1]);
                     break;
 				case FIRMATA_REPORT_VERSION: // report version
+                {
 					_majorProtocolVersion = _storedInputData[1];
 					_minorProtocolVersion = _storedInputData[0];
-					//EVENT//ofNotifyEvent(EProtocolVersionReceived, _majorProtocolVersion, this);
+                    Protein temp_p = ProteinWithDescrip ("EProtocolVersionReceived");
+                    AppendIngest (temp_p, "value", (int64)_majorProtocolVersion);
+                    Deposit (temp_p, _poolname);
                     break;
+                }
 				case FIRMATA_ANALOG_MESSAGE:
+                {
 					if(_analogHistory[_multiByteChannel].size()>0){
 						int previous = _analogHistory[_multiByteChannel].front();
                         
@@ -429,14 +453,20 @@ void Greenduino::processData(unsigned char inputData){
 							_analogHistory[_multiByteChannel].pop_back();
                         
 						// trigger an event if the pin has changed value
-						if(_analogHistory[_multiByteChannel].front()!=previous){}
-							//EVENT//ofNotifyEvent(EAnalogPinChanged, _multiByteChannel, this);
+						if(_analogHistory[_multiByteChannel].front()!=previous)
+                        {
+                            Protein temp_p = ProteinWithDescrip ("EAnalogPinChanged");
+                            AppendIngest (temp_p, "pin", (int64)_multiByteChannel);
+                            AppendIngest (temp_p, "value", (int64)getAnalog(_multiByteChannel));//TODO
+                            Deposit (temp_p, _poolname);
+                        }
 					}else{
 						_analogHistory[_multiByteChannel].push_front((_storedInputData[0] << 7) | _storedInputData[1]);
 						if((int)_analogHistory[_multiByteChannel].size()>_analogHistoryLength)
 							_analogHistory[_multiByteChannel].pop_back();
 					}
                     break;
+                }
 			}
             
 		}
@@ -499,6 +529,7 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 	// act on reserved sysEx messages (extended commands) or trigger SysEx event...
 	switch(data.front()) { //first byte in buffer is command
 		case FIRMATA_SYSEX_REPORT_FIRMWARE:
+        {
 			it = data.begin();
 			it++; // skip the first byte, which is the firmware version command
 			_majorFirmwareVersion = *it;
@@ -516,17 +547,21 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 			_firmwareName = str;
             
 			_firmwareVersionSum = _majorFirmwareVersion * 10 + _minorFirmwareVersion;
-			//EVENT//ofNotifyEvent(EFirmwareVersionReceived, _majorFirmwareVersion, this);
-            
+            Protein temp_p = ProteinWithDescrip ("EFirmwareVersionReceived");
+            AppendIngest (temp_p, "value", (int64)_majorFirmwareVersion);
+            Deposit (temp_p, _poolname);
 			// trigger the initialization event
             if (!_initialized) {
                 initPins();
-                //EVENT//ofNotifyEvent(EInitialized, _majorFirmwareVersion, this);
-                
+                Protein temp_p = ProteinWithDescrip ("EInitialized");
+                AppendIngest (temp_p, "value", (int64)_majorFirmwareVersion);
+                Deposit (temp_p, _poolname);
             }
             
             break;
+        }
 		case FIRMATA_SYSEX_FIRMATA_STRING:
+        {
 			it = data.begin();
 			it++; // skip the first byte, which is the string command
 			while( it != data.end() ) {
@@ -541,13 +576,30 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 			if((int)_stringHistory.size()>_stringHistoryLength)
                 _stringHistory.pop_back();
             
-			//EVENT//ofNotifyEvent(EStringReceived, str, this);
+            Protein temp_p = ProteinWithDescrip ("EStringReceived");
+            AppendIngest (temp_p, "value", ToStr(str));
+            Deposit (temp_p, _poolname);
+
             break;
+        }
 		default: // the message isn't in Firmatas extended command set
 			_sysExHistory.push_front(data);
 			if((int)_sysExHistory.size()>_sysExHistoryLength)
                 _sysExHistory.pop_back();
-			//EVENT//ofNotifyEvent(ESysExReceived, data, this);
+
+            Protein temp_p = ProteinWithDescrip ("ESysExReceived,");
+            //Seems like an aweful lot of work to convert a vector to string
+            std::ostringstream oss;
+            if (!data.empty())
+            {
+                std::copy(data.begin(), data.end()-1,
+                          std::ostream_iterator<int>(oss, ""));
+                
+                oss << data.back();
+            }
+            AppendIngest (temp_p, "value", ToStr(oss));
+            Deposit (temp_p, _poolname);
+
             break;
             
 	}
@@ -587,8 +639,12 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                         _digitalHistory[pin].pop_back();
                     
                     // trigger an event if the pin has changed value
-                    if(_digitalHistory[pin].front()!=previous){
-                        //EVENT//ofNotifyEvent(EDigitalPinChanged, pin, this);
+                    if(_digitalHistory[pin].front()!=previous)
+                    {
+                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
+                        AppendIngest (temp_p, "pin", (int64)pin);
+                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
+                        Deposit (temp_p, _poolname);
                     }
                 }
             }
@@ -608,8 +664,12 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                         _digitalHistory[pin].pop_back();
                     
                     // trigger an event if the pin has changed value
-                    if(_digitalHistory[pin].front()!=previous){
-                        //EVENT//ofNotifyEvent(EDigitalPinChanged, pin, this);
+                    if(_digitalHistory[pin].front()!=previous)
+                    {
+                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
+                        AppendIngest (temp_p, "pin", (int64)pin);
+                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
+                        Deposit (temp_p, _poolname);
                     }
                 }
             }
@@ -630,8 +690,12 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                         _digitalHistory[pin].pop_back();
                     
                     // trigger an event if the pin has changed value
-                    if(_digitalHistory[pin].front()!=previous){
-                        //EVENT//ofNotifyEvent(EDigitalPinChanged, pin, this);
+                    if(_digitalHistory[pin].front()!=previous)
+                    {
+                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
+                        AppendIngest (temp_p, "pin", (int64)pin);
+                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
+                        Deposit (temp_p, _poolname);
                     }
                 }
             }

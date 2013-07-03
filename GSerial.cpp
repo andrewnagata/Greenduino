@@ -9,11 +9,14 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include "GreenhouseHeaders.h"
+
 // serial error codes
-#define OF_SERIAL_NO_DATA 	-2
-#define OF_SERIAL_ERROR		-1
+#define G_SERIAL_NO_DATA 	-2
+#define G_SERIAL_ERROR		-1
 
 using namespace std;
+using namespace oblong::greenhouse;
 
 //----------------------------------------------------------------
 GSerial::GSerial()
@@ -53,7 +56,7 @@ void GSerial::buildDeviceList()
     int deviceCount		= 0;
     
     if (dir == NULL){
-        cout << "GSerial: error listing devices in /dev" << endl;
+        INFORM("GSerial: error listing devices in /dev");
     } else {
         //for each device
         while((entry = readdir(dir)) != NULL){
@@ -92,7 +95,7 @@ void GSerial::listDevices(){
 	buildDeviceList();
 	for(int k = 0; k < (int)devices.size(); k++)
     {
-		cout << "[" << devices[k].getDeviceID() << "] = "<< devices[k].getDeviceName().c_str() << endl;
+		INFORM("[" + ToStr(devices[k].getDeviceID()) + "] = " + ToStr(devices[k].getDeviceName()));
 	}
 }
 
@@ -126,7 +129,7 @@ bool GSerial::setup(int deviceNumber, int baud){
 	if( deviceNumber < (int)devices.size() ){
 		return setup(devices[deviceNumber].devicePath, baud);
 	}else{
-		cout << "GSerial: could not find device " << deviceNumber << "- only " << devices.size() << " devices found";
+        INFORM("GSerial: could not find device " + ToStr(deviceNumber) + "- only " + ToStr(devices.size()) + " devices found");
 		return false;
 	}
 }
@@ -141,10 +144,10 @@ bool GSerial::setup(string portName, int baud){
         portName = "/dev/" + portName;
     }
     
-    cout << "GSerialInit: opening port " << portName.c_str() << " " << baud << " bps";
+    INFORM("GSerialInit: opening port " + ToStr(portName) + " " + ToStr(baud) + " bps");
     fd = open(portName.c_str(), O_RDWR | O_NOCTTY | O_NONBLOCK);
     if(fd == -1){
-        //ofLog(OF_LOG_ERROR,"ofSerial: unable to open port %s", portName.c_str());
+        INFORM("GSerial: unable to open port " + ToStr(portName));
         return false;
     }
     
@@ -191,7 +194,7 @@ bool GSerial::setup(string portName, int baud){
             
         default:	cfsetispeed(&options,B9600);
             cfsetospeed(&options,B9600);
-            //ofLog(OF_LOG_ERROR,"ofSerialInit: cannot set %i baud setting baud to 9600", baud);
+            INFORM("ofSerialInit: cannot set " + ToStr(baud) + " baud -- setting baud to 9600");
             break;
     }
     
@@ -203,7 +206,7 @@ bool GSerial::setup(string portName, int baud){
     tcsetattr(fd,TCSANOW,&options);
     
     bInited = true;
-    //ofLog(OF_LOG_NOTICE,"success in opening serial connection");
+    INFORM("success in opening serial connection");
 
     return true;
 }
@@ -213,18 +216,19 @@ bool GSerial::setup(string portName, int baud){
 int GSerial::writeBytes(unsigned char * buffer, int length){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
-		return OF_SERIAL_ERROR;
+        INFORM("GSerial: serial not inited");
+		return G_SERIAL_ERROR;
 	}
 
     int numWritten = write(fd, buffer, length);
     if(numWritten <= 0){
         if ( errno == EAGAIN )
             return 0;
-        //ofLog(OF_LOG_ERROR,"ofSerial: Can't write to com port, errno %i (%s)", errno, strerror(errno));
-        return OF_SERIAL_ERROR;
+        INFORM("GSerial: Can't write to com port " + ToStr(errno) + "(" + strerror(errno) + ")");
+        return G_SERIAL_ERROR;
     }
     
+    //LEAVING THIS OUT FOR NOW
     //ofLog(OF_LOG_VERBOSE,"ofSerial: numWritten %i", numWritten);
     
     return numWritten;
@@ -234,16 +238,16 @@ int GSerial::writeBytes(unsigned char * buffer, int length){
 int GSerial::readBytes(unsigned char * buffer, int length){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
-		return OF_SERIAL_ERROR;
+        INFORM("GSerial: serial not inited");
+		return G_SERIAL_ERROR;
 	}
 
     int nRead = read(fd, buffer, length);
     if(nRead < 0){
         if ( errno == EAGAIN )
-            return OF_SERIAL_NO_DATA;
-        //ofLog(OF_LOG_ERROR,"ofSerial: trouble reading from port, errno %i (%s)", errno, strerror(errno));
-        return OF_SERIAL_ERROR;
+            return G_SERIAL_NO_DATA;
+        INFORM("GSerial: trouble reading from port " + ToStr(errno) + "(" + strerror(errno) + ")");
+        return G_SERIAL_ERROR;
     }
     return nRead;
 }
@@ -252,8 +256,7 @@ int GSerial::readBytes(unsigned char * buffer, int length){
 bool GSerial::writeByte(unsigned char singleByte){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
-		//return OF_SERIAL_ERROR; // this looks wrong.
+		INFORM("GSerial: serial not inited");
 		return false;
 	}
     
@@ -265,11 +268,12 @@ bool GSerial::writeByte(unsigned char singleByte){
     if(numWritten <= 0 ){
         if ( errno == EAGAIN )
             return 0;
-        //ofLog(OF_LOG_ERROR,"ofSerial: Can't write to com port, errno %i (%s)", errno, strerror(errno));
-        return OF_SERIAL_ERROR;
+        INFORM("GSerial: Can't write to com port " + ToStr(errno) + "(" + strerror(errno) + ")");
+        return G_SERIAL_ERROR;
     }
-    //ofLog(OF_LOG_VERBOSE,"ofSerial: written byte");
     
+    //LEAVING THIS OUT
+    //ofLog(OF_LOG_VERBOSE,"ofSerial: written byte");
     
     return (numWritten > 0 ? true : false);
 }
@@ -278,8 +282,8 @@ bool GSerial::writeByte(unsigned char singleByte){
 int GSerial::readByte(){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
-		return OF_SERIAL_ERROR;
+		INFORM("GSerial: serial not inited");
+		return G_SERIAL_ERROR;
 	}
     
 	unsigned char tmpByte[1];
@@ -288,12 +292,12 @@ int GSerial::readByte(){
     int nRead = read(fd, tmpByte, 1);
     if(nRead < 0){
         if ( errno == EAGAIN )
-            return OF_SERIAL_NO_DATA;
-        //ofLog(OF_LOG_ERROR,"ofSerial: trouble reading from port, errno %i (%s)", errno, strerror(errno));
-        return OF_SERIAL_ERROR;
+            return G_SERIAL_NO_DATA;
+        INFORM("GSerial: trouble reading from port " + ToStr(errno) + "(" + strerror(errno) + ")");
+        return G_SERIAL_ERROR;
     }
     if(nRead == 0)
-        return OF_SERIAL_NO_DATA;
+        return G_SERIAL_NO_DATA;
     
 	return (int)(tmpByte[0]);
 }
@@ -303,7 +307,7 @@ int GSerial::readByte(){
 void GSerial::flush(bool flushIn, bool flushOut){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
+		INFORM("GSerial: serial not inited");
 		return;
 	}
     
@@ -319,7 +323,7 @@ void GSerial::flush(bool flushIn, bool flushOut){
 
 void GSerial::drain(){
     if (!bInited){
-        //ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
+        INFORM("GSerial: serial not inited");
         return;
     }
 
@@ -330,8 +334,8 @@ void GSerial::drain(){
 int GSerial::available(){
     
 	if (!bInited){
-		//ofLog(OF_LOG_ERROR,"ofSerial: serial not inited");
-		return OF_SERIAL_ERROR;
+		INFORM("GSerial: serial not inited");
+		return G_SERIAL_ERROR;
 	}
     
 	int numBytes = 0;
