@@ -11,7 +11,6 @@
 #include <termios.h>
 #include <string.h>
 #include <vector.h>
-
 #include "SerialDeviceinfo.h"
 
 #endif /* defined(GSerial_H) */

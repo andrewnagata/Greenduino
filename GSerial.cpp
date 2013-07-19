@@ -228,8 +228,7 @@ int GSerial::writeBytes(unsigned char * buffer, int length){
         return G_SERIAL_ERROR;
     }
     
-    //LEAVING THIS OUT FOR NOW
-    //ofLog(OF_LOG_VERBOSE,"ofSerial: numWritten %i", numWritten);
+    //INFORM("GSerial: " + ToStr(numWritten));
     
     return numWritten;
 }
@@ -272,8 +271,7 @@ bool GSerial::writeByte(unsigned char singleByte){
         return G_SERIAL_ERROR;
     }
     
-    //LEAVING THIS OUT
-    //ofLog(OF_LOG_VERBOSE,"ofSerial: written byte");
+    //INFORM("GSerial: " + ToStr(tmpByte));
     
     return (numWritten > 0 ? true : false);
 }

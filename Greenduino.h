@@ -303,35 +303,7 @@ public:
     
     int getValueFromTwo7bitBytes(unsigned char lsb, unsigned char msb);
     // useful for parsing SysEx messages
-    
-    // --- events
-    
-    /*
-    ofEvent<const int> EDigitalPinChanged;
-    // triggered when a digital pin changes value, the pin that changed is passed as an argument
-    
-    ofEvent<const int> EAnalogPinChanged;
-    // triggered when an analog pin changes value, the pin that changed is passed as an argument
-    
-    ofEvent<const vector<unsigned char> > ESysExReceived;
-    // triggered when a SysEx message that isn't in the extended command set is received, the SysEx message is passed as an argument
-    
-    ofEvent<const int> EProtocolVersionReceived;
-    // triggered when a protocol version is received, the major version is passed as an argument
-    
-    ofEvent<const int> EFirmwareVersionReceived;
-    // triggered when a firmware version is received, the major version is passed as an argument
-    
-    ofEvent<const int> EInitialized;
-    // triggered when the firmware version is received upon connect, the major firmware version is passed as an argument
-    // from this point it's safe to send to the Arduino.
-    
-    ofEvent<const string> EStringReceived;
-    // triggered when a string is received, the string is passed as an argument
-    */
-    
-    
-    
+
     // -- servo
     void sendServo(int pin, int value, bool force=false);
     // pin: 9, 10
