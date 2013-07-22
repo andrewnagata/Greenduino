@@ -47,17 +47,16 @@
 
 // TODO throw event or exception if the serial port goes down...
 //---------------------------------------------------------------------------
-Greenduino::Greenduino() : Thing()
+Greenduino::Greenduino(Str arduino_name, Str port_path)
+  :  Thing(),
+     arduinoName = arduino_name;
 {
     init();
-}
-
-Greenduino::Greenduino(const Str &poolname) : Thing()
-{
-    init();
-    
-    _poolname = poolname;
-    ParticipateInPool(_poolname);
+    ParticipateInPool ("from-arduino");
+    ParticipateInPool ("to-arduino");
+    ListenForDescrip (arduinoName);
+    ListenForDescrip ("all-arduinos");
+    connect (port_path . utf8());
 }
 
 void Greenduino::init()
@@ -139,6 +138,53 @@ bool Greenduino::connect(string device, int baud){
 	return connected;
 }
 
+void Metabolize (const Protein &p)
+    { if (HasDescrip (p, "set-pin-mode"))
+       { if (HasIngest (p, "pin") && HasIngest (p, "mode"))
+          { int64 pin = Ingest <int64> (p, "pin");
+            Str mode = Ingest <Str> (p, "mode");
+            if (mode == "input")
+              sendDigitalPinMode(pin, ARD_INPUT);
+            else if (mode == "output")
+              sendDigitalPinMode(pin, ARD_OUTPUT);
+            else if (mode == "pwm")
+              sendDigitalPinMode(pin, ARD_PWM);
+          }
+        } 
+      if (HasDescrip (p, "set-pin-state"))
+        { if (HasIngest (p, "pin") && HasIngest (p, "state"))
+            { int64 pin = Ingest <int64> (p, "pin");
+              bool pinState = Ingest <bool> (p, "state");
+              sendDigital (pin, pinState);
+            }
+        }
+        if (HasDescrip (p, "set-pin-pwm"))
+          { if (HasIngest (p, "pin") && HasIngest (p, "pwm"))
+              { int64 pin = Ingest <int64> (p, "pin");
+                int64 pwm = Ingest <bool> (p, "pwm");
+                sendPwm (pin, pwm);
+              }
+          }
+    }
+
+  void Travail()
+    { update();
+      Slaw pinReadings = Slaw::List();
+      for (int64 i = 0; i < digitalPinsNum; i++)
+        { int64 pinMode = getDigitalPinMode (i);
+          int64 pinVal = -1;
+          if (pinMode == ARD_INPUT)
+            pinVal = getDigital (i);
+          if (pinMode == ARD_ANALOG)
+            pinVal = getAnalog (i);
+          pinReadings = pinReadings . ListAppend (pinVal);
+        }
+      Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
+                           pinReadings);
+      Deposit (p, "from-arduino");
+
+    }
+
 // this method is not recommended
 // the preferred method is to listen for the EInitialized event in your application
 bool Greenduino::isArduinoReady(){
@@ -153,11 +199,6 @@ bool Greenduino::isArduinoReady(){
 
 void  Greenduino::setUseDelay(bool bDelay){
 	bUseDelay = bDelay;
-}
-
-void Greenduino::setPoolName( const Str &poolname)
-{
-    _poolname = poolname;
 }
 
 void Greenduino::setDigitalHistoryLength(int length){

@@ -162,7 +162,7 @@ class Greenduino : public Thing
 public:
     
     Greenduino();
-    Greenduino(const Str &poolname );
+    Greenduino(Str arduino_name, Str port_path);
     
     virtual ~Greenduino();
     
@@ -173,11 +173,14 @@ public:
     void disconnect();
     // closes the serial port connection
     
+    // greenhousey methods
+    void Metabolize();
+    void Travail();
+
+
     bool isArduinoReady();
     
     void setUseDelay(bool bDelay);
-    
-    void setPoolName( const Str &poolname);
     
     void update();
     // polls data from the serial port, this has to be called periodically
@@ -326,6 +329,7 @@ public:
 
 protected:
     bool _initialized;
+    Str arduinoName;
     
     void init();
     

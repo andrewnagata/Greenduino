@@ -11,15 +11,13 @@ class App : public Thing
     {
         ParticipateInPool("arduino");
         
-        //Pass poolname along inside constructor
-        //can use setPoolName(name) later if desired
-        _greenduino = new Greenduino("arduino");
-        
-        // replace the string below with the serial port for your Arduino board
+        // Pass a name for this arduino
+        // replace the second string below with the serial port for your Arduino board
         // you can get this from the Arduino application or via command line
         // for OSX, in your terminal type "ls /dev/tty.*" to get a list of serial devices
         // Or, look in the output window for a list of devices
-        _greenduino -> connect("/dev/tty.usbmodem1d11");
+        _greenduino = new Greenduino("arduino", "/dev/tty.usbmodem1d11");
+        
     }
     
     void Blurt (BlurtEvent *e)
@@ -64,11 +62,6 @@ class App : public Thing
             int64 value = Ingest <int64> (p, "value");
             INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
         }
-    }
-    
-    void Travail()
-    {
-        _greenduino -> update();
     }
 };
 
