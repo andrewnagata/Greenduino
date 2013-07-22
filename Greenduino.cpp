@@ -872,3 +872,6 @@ int Greenduino::getServo(int pin){
         else
             return -1;
 }
+
+int Greenduino::getDigitalPinNum()
+{ return _totalDigitalPins; }

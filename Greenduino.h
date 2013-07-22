@@ -322,6 +322,8 @@ public:
     int getServo(int pin);
     // returns the last set servo value for a pin if the pin has a servo attached
     
+    int getDigitalPinNum();
+
 protected:
     bool _initialized;
     
