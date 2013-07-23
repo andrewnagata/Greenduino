@@ -354,8 +354,9 @@ protected:
     GSerial _port;
     int _portStatus;
     
-    // -- the Greenhouse poolname
-    Str _poolname;
+    // -- the Greenhouse pool names
+    Str _outputPoolName;
+    Str _inputPoolName;
     
     // --- history variables
     int _analogHistoryLength;
