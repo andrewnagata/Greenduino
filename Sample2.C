@@ -1,34 +1,58 @@
 #include "Greenhouse.h"
 #include "Greenduino.h"
 
-class ArduinoInterface : public Thing
+class ArduinoController : public Thing
 {
     public:
     
+    /** make sure this matches the arduino_name you set for the Greenduino
+        you want to control
+    */
+    Str arduino_name = "ardy";
+    /** if your arduino is connected to the same computer as this app,
+        leave this string empty
+        if its on a different machine, put its tcp address here
+        e.g. tcp://Client-Solutions-Test-Macbook-Pro.local/
+    */
     Str pool_path = "tcp://Client-Solutions-Test-Macbook-Pro.local/";
+    Str output_pool_name;
+    Str input_pool_name;
+    Text *sensor_value;
 
-    ArduinoInterface () : Thing()
-    {  ParticipateInPool (pool_path + "from-arduino");
-       ParticipateInPool (pool_path + "to-arduino");
+    ArduinoController () : Thing()
+    {  output_pool_name = pool_path + "to-arduino";
+       input_pool_name = pool_path + "from-arduino";
+       ParticipateInPool (input_pool_name);
+       ParticipateInPool (output_pool_name);
+       sensor_value = new Text ("waiting");
+       AppendKid (sensor_value);
     }
     
+    // constructs and deposits a protein to turn a digital pin on or off
+    void SetPinState (int64 num, bool state)
+    { Protein p = ProteinWithDescrip (arduino_name);
+      AppendDescrip (p, "set-pin-state");
+      AppendIngest (p, "pin", num);
+      AppendIngest (p, "state", state);
+      Deposit (p, output_pool_name);
+    }
+
+    void SetPinMode (int64 num, Str mode)
+    { Protein p = ProteinWithDescrip (arduino_name);
+      AppendDescrip (p, "set-pin-mode");
+      AppendIngest (p, "pin", num);
+      AppendIngest (p, "mode", mode);
+      Deposit (p, pool_path + "to-arduino");
+    }
+
     void Blurt (BlurtEvent *e)
     {
         if (Utters (e, "victory") )
-        { Protein p = ProteinWithDescrip ("ardy");
-          AppendDescrip (p, "set-pin-state");
-          AppendIngest (p, "pin", (int64)13);
-          AppendIngest (p, "state", true);
-          Deposit (p, pool_path + "to-arduino");
-        }
+          SetPinState (13, true);
+        
         
         if (Utters (e, "elleshaped") )
-        { Protein p = ProteinWithDescrip ("ardy");
-          AppendDescrip (p, "set-pin-state");
-          AppendIngest (p, "pin", (int64)13);
-          AppendIngest (p, "state", false);
-          Deposit (p, pool_path + "to-arduino");
-        }
+          SetPinState (13, false);
     }
     
     void Metabolize (const Protein &p)
@@ -37,23 +61,8 @@ class ArduinoInterface : public Thing
         if (HasDescrip (p, "EInitialized"))
         {
             //Set up pin modes
-            Protein p = ProteinWithDescrip("set-pin-mode");
-            AppendDescrip (p, "ardy");
-            AppendIngest (p, "pin", (int64)13);
-            AppendIngest (p, "mode", "digital-output");
-            Deposit (p, pool_path + "to-arduino");            
-
-            Protein p1 = ProteinWithDescrip("set-pin-mode");
-            AppendDescrip (p1, "ardy");
-            AppendIngest (p1, "pin", (int64)0);
-            AppendIngest (p1, "mode", "analog-input");
-            Deposit (p1, pool_path + "to-arduino");
-            
-            Protein p2 = ProteinWithDescrip("set-pin-mode");
-            AppendDescrip (p2, "ardy");
-            AppendIngest (p2, "pin", (int64)2);
-            AppendIngest (p2, "mode", "digital-input");
-            Deposit (p2, pool_path + "to-arduino");
+            SetPinMode (13, "digital-output");
+            SetPinMode (0, "analog-input");
         }
         
         //A DIGITAL pin has changed value
@@ -69,14 +78,21 @@ class ArduinoInterface : public Thing
             int64 pin = Ingest <int64> (p, "pin");
             int64 value = Ingest <int64> (p, "value");
         }
+
+        if (HasDescrip (p, arduino_name) && HasDescrip (p, "heartbeat"))
+        { if (HasIngest (p, "pin-vals"))
+            { Trove <int64> s = TroveFromIngest <int64> (p, "pin-vals");
+              sensor_value -> SetString (ToStr (s . Nth(0)));
+            }
+
+        }
     }
 };
 
 void Setup ()
 {
-    ArduinoInterface *ai = new ArduinoInterface();
-    
-    ai -> SlapOnFeld();
+    ArduinoController *ac = new ArduinoController();
+    ac -> SlapOnFeld();
     
     DoNotRegisterForDefaultEvents();
     
