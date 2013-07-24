@@ -167,15 +167,15 @@ public:
     virtual ~Greenduino();
     
     // --- setup functions
-    bool connect(string device, int baud = 57600);
+    bool connect(int baud = 57600);
     // opens a serial port connection to the arduino
     
     void disconnect();
     // closes the serial port connection
     
     // greenhousey methods
-    void Metabolize();
-    void Travail();
+    virtual void Metabolize (const Protein &p);
+    virtual void Travail();
 
 
     bool isArduinoReady();
@@ -330,6 +330,7 @@ public:
 protected:
     bool _initialized;
     Str arduinoName;
+    Str portPath;
     
     void init();
     

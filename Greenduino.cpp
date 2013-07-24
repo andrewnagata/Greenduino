@@ -49,7 +49,8 @@
 //---------------------------------------------------------------------------
 Greenduino::Greenduino(Str arduino_name, Str port_path)
   :  Thing(),
-     arduinoName = arduino_name;
+     arduinoName(arduino_name),
+     portPath(port_path)
 {
     init();
     _outputPoolName = "from-arduino";
@@ -58,7 +59,7 @@ Greenduino::Greenduino(Str arduino_name, Str port_path)
     ParticipateInPool (_inputPoolName);
     ListenForDescrip (arduinoName);
     ListenForDescrip ("all-arduinos");
-    connect (port_path . utf8());
+    connect();
 }
 
 void Greenduino::init()
@@ -131,26 +132,30 @@ void Greenduino::initPins() {
     _initialized = true;
 }
 
-bool Greenduino::connect(string device, int baud){
+bool Greenduino::connect(int baud){
     
 	connectTime = CurTime();
 	_initialized = false;
 	_port.listDevices();
-	connected = _port.setup(device.c_str(), baud);
+	connected = _port.setup (portPath . utf8(), baud);
 	return connected;
 }
 
-void Metabolize (const Protein &p)
+void Greenduino::Metabolize (const Protein &p)
     { if (HasDescrip (p, "set-pin-mode"))
        { if (HasIngest (p, "pin") && HasIngest (p, "mode"))
           { int64 pin = Ingest <int64> (p, "pin");
             Str mode = Ingest <Str> (p, "mode");
             if (mode == "input")
-              sendDigitalPinMode(pin, ARD_INPUT);
+              { if (pin > 5)
+                  sendDigitalPinMode (pin, ARD_INPUT);
+                else
+                  sendAnalogPinReporting (pin, ARD_ON);
+              }
             else if (mode == "output")
-              sendDigitalPinMode(pin, ARD_OUTPUT);
+              sendDigitalPinMode (pin, ARD_OUTPUT);
             else if (mode == "pwm")
-              sendDigitalPinMode(pin, ARD_PWM);
+              sendDigitalPinMode (pin, ARD_PWM);
           }
         } 
       if (HasDescrip (p, "set-pin-state"))
@@ -169,21 +174,29 @@ void Metabolize (const Protein &p)
           }
     }
 
-  void Travail()
+  void Greenduino::Travail ()
     { update();
-      Slaw pinReadings = Slaw::List();
-      for (int64 i = 0; i < digitalPinsNum; i++)
-        { int64 pinMode = getDigitalPinMode (i);
-          int64 pinVal = -1;
-          if (pinMode == ARD_INPUT)
-            pinVal = getDigital (i);
-          if (pinMode == ARD_ANALOG)
-            pinVal = getAnalog (i);
-          pinReadings = pinReadings . ListAppend (pinVal);
+      if (_initialized)
+        { Slaw pinReadings = Slaw::List();
+          for (int64 i = 0; i < _totalDigitalPins; i++)
+            { int64 pinMode = getDigitalPinMode (i);
+              int64 pinVal = -1;
+              if (i == 0)
+                INFORM ("pinMode of pin 0: " + ToStr(pinMode) );
+              if (pinMode == 0)
+              {
+                pinVal = getDigital (i);
+              }
+              else if (pinMode == 1)
+              {
+                pinVal = getAnalog (i);
+              }
+              pinReadings = pinReadings . ListAppend (pinVal);
+            }
+          Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
+                               pinReadings);
+          Deposit (p, _outputPoolName);
         }
-      Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
-                           pinReadings);
-      Deposit (p, _outputPoolName);
 
     }
 
