@@ -162,7 +162,7 @@ class Greenduino : public Thing
 public:
     
     Greenduino();
-    Greenduino(Str arduino_name, Str port_path);
+    Greenduino(Str arduino_name, Str port_path, Str pool_path = "");
     
     virtual ~Greenduino();
     
@@ -329,8 +329,9 @@ public:
 
 protected:
     bool _initialized;
-    Str arduinoName;
-    Str portPath;
+    Str _arduino_name;
+    Str _port_path;
+    Str _pool_path;
     
     void init();
     

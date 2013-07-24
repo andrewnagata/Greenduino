@@ -47,17 +47,18 @@
 
 // TODO throw event or exception if the serial port goes down...
 //---------------------------------------------------------------------------
-Greenduino::Greenduino(Str arduino_name, Str port_path)
+Greenduino::Greenduino(Str arduino_name, Str port_path, Str pool_path)
   :  Thing(),
-     arduinoName(arduino_name),
-     portPath(port_path)
+     _arduino_name(arduino_name),
+     _port_path(port_path),
+     _pool_path(pool_path)
 {
     init();
-    _outputPoolName = "from-arduino";
-    _inputPoolName = "to-arduino";
+    _outputPoolName = _pool_path + "from-arduino";
+    _inputPoolName = _pool_path + "to-arduino";
     ParticipateInPool (_outputPoolName);
     ParticipateInPool (_inputPoolName);
-    ListenForDescrip (arduinoName);
+    ListenForDescrip (arduino_name);
     ListenForDescrip ("all-arduinos");
     connect();
 }
@@ -137,7 +138,7 @@ bool Greenduino::connect(int baud){
 	connectTime = CurTime();
 	_initialized = false;
 	_port.listDevices();
-	connected = _port.setup (portPath . utf8(), baud);
+	connected = _port.setup (_port_path . utf8(), baud);
 	return connected;
 }
 
@@ -185,7 +186,7 @@ void Greenduino::Metabolize (const Protein &p)
                 pinVal = getAnalog (i);
               pinReadings = pinReadings . ListAppend (pinVal);
             }
-          Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
+          Protein p = Protein (Slaw::List (_arduino_name, "heartbeat"),
                                Slaw::Map ("pin-vals", pinReadings));
           Deposit (p, _outputPoolName);
         }
