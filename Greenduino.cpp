@@ -146,15 +146,13 @@ void Greenduino::Metabolize (const Protein &p)
        { if (HasIngest (p, "pin") && HasIngest (p, "mode"))
           { int64 pin = Ingest <int64> (p, "pin");
             Str mode = Ingest <Str> (p, "mode");
-            if (mode == "input")
-              { if (pin > 5)
-                  sendDigitalPinMode (pin, ARD_INPUT);
-                else
-                  sendAnalogPinReporting (pin, ARD_ON);
-              }
-            else if (mode == "output")
+            if (mode == "analog-input")
+              sendAnalogPinReporting (pin, ARD_ON);
+            if (mode == "digital-input")
+              sendDigitalPinMode (pin, ARD_INPUT);
+            else if (mode == "digital-output")
               sendDigitalPinMode (pin, ARD_OUTPUT);
-            else if (mode == "pwm")
+            else if (mode == "pwm-output")
               sendDigitalPinMode (pin, ARD_PWM);
           }
         } 
@@ -181,16 +179,10 @@ void Greenduino::Metabolize (const Protein &p)
           for (int64 i = 0; i < _totalDigitalPins; i++)
             { int64 pinMode = getDigitalPinMode (i);
               int64 pinVal = -1;
-              if (i == 0)
-                INFORM ("pinMode of pin 0: " + ToStr(pinMode) );
               if (pinMode == 0)
-              {
                 pinVal = getDigital (i);
-              }
-              else if (pinMode == 1)
-              {
+              else if (i < 6 && pinMode == 1)
                 pinVal = getAnalog (i);
-              }
               pinReadings = pinReadings . ListAppend (pinVal);
             }
           Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
