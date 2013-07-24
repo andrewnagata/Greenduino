@@ -186,7 +186,7 @@ void Greenduino::Metabolize (const Protein &p)
               pinReadings = pinReadings . ListAppend (pinVal);
             }
           Protein p = Protein (Slaw::List (arduinoName, "heartbeat"),
-                               pinReadings);
+                               Slaw::Map ("pin-vals", pinReadings));
           Deposit (p, _outputPoolName);
         }
 

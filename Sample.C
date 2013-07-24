@@ -15,7 +15,6 @@ class App : public Thing
         // for OSX, in your terminal type "ls /dev/tty.*" to get a list of serial devices
         // Or, look in the output window for a list of devices
         _greenduino = new Greenduino("ardy", "/dev/tty.usbserial-A9007MYl");
-        ParticipateInPool("from-arduino");
     }
     
     void Blurt (BlurtEvent *e)
@@ -40,21 +39,9 @@ class App : public Thing
             
             _greenduino -> sendDigitalPinMode(13, ARD_OUTPUT);
 
-            Protein p = ProteinWithDescrip("set-pin-mode");
-            AppendDescrip (p, "ardy");
-            AppendIngest (p, "pin", (int64)0);
-            AppendIngest (p, "mode", "analog-input");
-            Deposit (p, "to-arduino");
+            _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG); //Analog sensor connected to pin A0 on Arduino
             
-            Protein p2 = ProteinWithDescrip("set-pin-mode");
-            AppendDescrip (p2, "ardy");
-            AppendIngest (p2, "pin", (int64)2);
-            AppendIngest (p2, "mode", "digital-input");
-            Deposit (p2, "to-arduino");
-
-            // _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG); //Analog sensor connected to pin A0 on Arduino
-            
-            // INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
+            INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
         }
         
         //A DIGITAL pin has changed value
@@ -62,7 +49,7 @@ class App : public Thing
         {
             int64 pin = Ingest <int64> (p, "pin");
             int64 value = Ingest <int64> (p, "value");
-            // INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
+            INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
         }
         
         //An ANALOG pin has changed value
@@ -70,7 +57,7 @@ class App : public Thing
         {
             int64 pin = Ingest <int64> (p, "pin");
             int64 value = Ingest <int64> (p, "value");
-            // INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
+            INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
         }
     }
 };
