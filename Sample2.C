@@ -5,9 +5,11 @@ class ArduinoInterface : public Thing
 {
     public:
     
+    Str pool_path = "tcp://Client-Solutions-Test-Macbook-Pro.local/";
+
     ArduinoInterface () : Thing()
-    {  ParticipateInPool("from-arduino");
-       ParticipateInPool("to-arduino");
+    {  ParticipateInPool (pool_path + "from-arduino");
+       ParticipateInPool (pool_path + "to-arduino");
     }
     
     void Blurt (BlurtEvent *e)
@@ -17,7 +19,7 @@ class ArduinoInterface : public Thing
           AppendDescrip (p, "set-pin-state");
           AppendIngest (p, "pin", (int64)13);
           AppendIngest (p, "state", true);
-          Deposit (p, "to-arduino");
+          Deposit (p, pool_path + "to-arduino");
         }
         
         if (Utters (e, "elleshaped") )
@@ -25,7 +27,7 @@ class ArduinoInterface : public Thing
           AppendDescrip (p, "set-pin-state");
           AppendIngest (p, "pin", (int64)13);
           AppendIngest (p, "state", false);
-          Deposit (p, "to-arduino");
+          Deposit (p, pool_path + "to-arduino");
         }
     }
     
@@ -39,19 +41,19 @@ class ArduinoInterface : public Thing
             AppendDescrip (p, "ardy");
             AppendIngest (p, "pin", (int64)13);
             AppendIngest (p, "mode", "digital-output");
-            Deposit (p, "to-arduino");            
+            Deposit (p, pool_path + "to-arduino");            
 
             Protein p1 = ProteinWithDescrip("set-pin-mode");
             AppendDescrip (p1, "ardy");
             AppendIngest (p1, "pin", (int64)0);
             AppendIngest (p1, "mode", "analog-input");
-            Deposit (p1, "to-arduino");
+            Deposit (p1, pool_path + "to-arduino");
             
             Protein p2 = ProteinWithDescrip("set-pin-mode");
             AppendDescrip (p2, "ardy");
             AppendIngest (p2, "pin", (int64)2);
             AppendIngest (p2, "mode", "digital-input");
-            Deposit (p2, "to-arduino");
+            Deposit (p2, pool_path + "to-arduino");
         }
         
         //A DIGITAL pin has changed value
