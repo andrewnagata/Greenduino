@@ -143,7 +143,9 @@ bool Greenduino::connect(int baud){
 }
 
 void Greenduino::Metabolize (const Protein &p)
-    { if (HasDescrip (p, "set-pin-mode"))
+    { if (HasDescrip (p, "reset"))
+        sendReset();
+      if (HasDescrip (p, "set-pin-mode"))
        { if (HasIngest (p, "pin") && HasIngest (p, "mode"))
           { int64 pin = Ingest <int64> (p, "pin");
             Str mode = Ingest <Str> (p, "mode");
