@@ -58,7 +58,7 @@ Greenduino::Greenduino(Str arduino_name, Str port_path, Str pool_path)
     _inputPoolName = _pool_path + "to-arduino";
     ParticipateInPool (_outputPoolName);
     ParticipateInPool (_inputPoolName);
-    ListenForDescrip (arduino_name);
+    ListenForDescrip (_arduino_name);
     ListenForDescrip ("all-arduinos");
     connect();
 }
@@ -189,10 +189,24 @@ void Greenduino::Metabolize (const Protein &p)
               pinReadings = pinReadings . ListAppend (pinVal);
             }
           Protein p = Protein (Slaw::List (_arduino_name, "heartbeat"),
-                               Slaw::Map ("pin-vals", pinReadings));
+                               Slaw::Map ("pin-values", pinReadings));
           Deposit (p, _outputPoolName);
         }
 
+    }
+  void Greenduino::DepositDigitalPinChangedProtein (int64 pin, int64 value)
+    { Protein p = ProteinWithDescrip (_arduino_name);
+      AppendDescrip (p, "EDigitalPinChanged");
+      AppendIngest (p, "pin", (int64)pin);
+      AppendIngest (p, "value", (int64)getDigital(pin));
+      Deposit (p, _outputPoolName);
+    }
+  void Greenduino::DepositAnalogPinChangedProtein (int64 pin, int64 value)
+    { Protein p = ProteinWithDescrip (_arduino_name);
+      AppendDescrip (p, "EAnalogPinChanged");
+      AppendIngest (p, "pin", (int64)pin);
+      AppendIngest (p, "value", (int64)getAnalog(pin));
+      Deposit (p, _outputPoolName);
     }
 
 // this method is not recommended
@@ -489,7 +503,9 @@ void Greenduino::processData(unsigned char inputData){
                 {
 					_majorProtocolVersion = _storedInputData[1];
 					_minorProtocolVersion = _storedInputData[0];
-                    Protein temp_p = ProteinWithDescrip ("EProtocolVersionReceived");
+
+                    Protein temp_p = ProteinWithDescrip (_arduino_name);
+                    AppendDescrip (temp_p, "EProtocolVersionReceived");
                     AppendIngest (temp_p, "value", (int64)_majorProtocolVersion);
                     Deposit (temp_p, _outputPoolName);
                     break;
@@ -505,12 +521,8 @@ void Greenduino::processData(unsigned char inputData){
                         
 						// trigger an event if the pin has changed value
 						if(_analogHistory[_multiByteChannel].front()!=previous)
-                        {
-                            Protein temp_p = ProteinWithDescrip ("EAnalogPinChanged");
-                            AppendIngest (temp_p, "pin", (int64)_multiByteChannel);
-                            AppendIngest (temp_p, "value", (int64)getAnalog(_multiByteChannel));//TODO
-                            Deposit (temp_p, _outputPoolName);
-                        }
+              DepositAnalogPinChangedProtein (_multiByteChannel, getAnalog(_multiByteChannel));
+
 					}else{
 						_analogHistory[_multiByteChannel].push_front((_storedInputData[0] << 7) | _storedInputData[1]);
 						if((int)_analogHistory[_multiByteChannel].size()>_analogHistoryLength)
@@ -598,13 +610,15 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 			_firmwareName = str;
             
 			_firmwareVersionSum = _majorFirmwareVersion * 10 + _minorFirmwareVersion;
-            Protein temp_p = ProteinWithDescrip ("EFirmwareVersionReceived");
+            Protein temp_p = ProteinWithDescrip (_arduino_name);
+            AppendDescrip (temp_p, "EFirmwareVersionReceived");
             AppendIngest (temp_p, "value", (int64)_majorFirmwareVersion);
             Deposit (temp_p, _outputPoolName);
 			// trigger the initialization event
             if (!_initialized) {
                 initPins();
-                Protein temp_p = ProteinWithDescrip ("EInitialized");
+                Protein temp_p = ProteinWithDescrip (_arduino_name);
+                AppendDescrip (temp_p, "EInitialized");
                 AppendIngest (temp_p, "value", (int64)_majorFirmwareVersion);
                 Deposit (temp_p, _outputPoolName);
             }
@@ -627,7 +641,8 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 			if((int)_stringHistory.size()>_stringHistoryLength)
                 _stringHistory.pop_back();
             
-            Protein temp_p = ProteinWithDescrip ("EStringReceived");
+            Protein temp_p = ProteinWithDescrip (_arduino_name);
+            AppendDescrip (temp_p, "EStringReceived");
             AppendIngest (temp_p, "value", ToStr(str));
             Deposit (temp_p, _outputPoolName);
 
@@ -638,7 +653,6 @@ void Greenduino::processSysExData(vector<unsigned char> data){
 			if((int)_sysExHistory.size()>_sysExHistoryLength)
                 _sysExHistory.pop_back();
 
-            Protein temp_p = ProteinWithDescrip ("ESysExReceived,");
             //Seems like an aweful lot of work to convert a vector to string
             std::ostringstream oss;
             if (!data.empty())
@@ -648,6 +662,8 @@ void Greenduino::processSysExData(vector<unsigned char> data){
                 
                 oss << data.back();
             }
+            Protein temp_p = ProteinWithDescrip (_arduino_name);
+            AppendDescrip (temp_p, "ESysExReceived");
             AppendIngest (temp_p, "value", ToStr(oss));
             Deposit (temp_p, _outputPoolName);
 
@@ -691,12 +707,7 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                     
                     // trigger an event if the pin has changed value
                     if(_digitalHistory[pin].front()!=previous)
-                    {
-                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
-                        AppendIngest (temp_p, "pin", (int64)pin);
-                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
-                        Deposit (temp_p, _outputPoolName);
-                    }
+                      DepositDigitalPinChangedProtein (pin, getDigital(pin));
                 }
             }
             break;
@@ -716,12 +727,8 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                     
                     // trigger an event if the pin has changed value
                     if(_digitalHistory[pin].front()!=previous)
-                    {
-                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
-                        AppendIngest (temp_p, "pin", (int64)pin);
-                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
-                        Deposit (temp_p, _outputPoolName);
-                    }
+                      DepositDigitalPinChangedProtein (pin, getDigital(pin));
+                    
                 }
             }
             break;
@@ -742,12 +749,8 @@ void Greenduino::processDigitalPort(int port, unsigned char value){
                     
                     // trigger an event if the pin has changed value
                     if(_digitalHistory[pin].front()!=previous)
-                    {
-                        Protein temp_p = ProteinWithDescrip ("EDigitalPinChanged");
-                        AppendIngest (temp_p, "pin", (int64)pin);
-                        AppendIngest (temp_p, "value", (int64)getDigital(pin));
-                        Deposit (temp_p, _outputPoolName);
-                    }
+                      DepositDigitalPinChangedProtein (pin, getDigital(pin));
+                    
                 }
             }
             break;

@@ -338,6 +338,10 @@ protected:
     void initPins();
     int _totalDigitalPins;
     
+    // greenhouse methods
+    void DepositDigitalPinChangedProtein (int64 pin, int64 value);
+    void DepositAnalogPinChangedProtein (int64 pin, int64 value);
+
     void sendDigitalPinReporting(int pin, int mode);
     // sets pin reporting to ARD_ON or ARD_OFF
     // enables / disables reporting for the pins port
