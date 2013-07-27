@@ -2,8 +2,8 @@
 #include "Greenduino.h"
 
 /**
-    Run this example with Sample2-worker (on the same machine or a different one)
-    Here you will see how basic I/O with an arduino works via proteins.
+    Run this example with operaio.C (on the same machine or a different one)
+    Here you will see how basic I/O with an arduino works via heartbeat proteins.
 */
 
 class ArduinoController : public Thing
