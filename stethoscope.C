@@ -56,19 +56,21 @@ class ArduinoController : public Thing
                 SetPinMode (0, "analog-input");
                 first_heartbeat_heard = true;
               }
-            if (HasIngest (p, "pin-vals"))
+            if (HasIngest (p, "pin-values"))
               { Trove <int64> s = TroveFromIngest <int64> (p, "pin-vals");
                 sensor_value -> SetString (ToStr (s . Nth(0)));
               }
             // set a timer that only goes off if we stop getting heartbeats
-            SetFireTimer (10, 1);
+            SetFireTimer (2, 1);
           }
       }
 
     // we've stopped getting heartbeats,
     // so the arduino must have been disconnected
     void Fired()
-      { first_heartbeat_heard = false; }
+      { first_heartbeat_heard = false;
+        sensor_value -> SetString ("waiting");
+      }
 
     // constructs and deposits a protein to turn a digital pin on or off
     void SetPinState (int64 num, bool state)
