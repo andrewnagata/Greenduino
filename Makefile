@@ -49,25 +49,27 @@ endef
 export EXP_STR
 
 all: sample \
-		 sample2 \
-		 sample2-worker
+		 stethoscope \
+		 operaio
 clean:
 	-rm sample \
-	-rm sample2 \
-	-rm sample2-worker
+	-rm stethoscope \
+	-rm operaio
 
 sample: GSerial.cpp \
 				Greenduino.cpp \
 				sample.C
 	${CXX} $^ -lGreenhouse ${LDFLAGS} ${CXXFLAGS} -lboost_thread -lboost_system -lboost_filesystem -o $@
 	@echo	"$(OK_COLOR)$$EXP_STR$(NO_COLOR)"
-sample2: GSerial.cpp \
-				 Greenduino.cpp \
-				 sample2.C
+
+stethoscope: GSerial.cpp \
+						 Greenduino.cpp \
+						 stethoscope.C
 	${CXX} $^ -lGreenhouse ${LDFLAGS} ${CXXFLAGS} -lboost_thread -lboost_system -lboost_filesystem -o $@
 	@echo	"$(OK_COLOR)$$EXP_STR$(NO_COLOR)"
-sample2-worker: GSerial.cpp \
+	
+operaio: GSerial.cpp \
 				 Greenduino.cpp \
-				 sample2-worker.C
+				 operaio.C
 	${CXX} $^ -lGreenhouse ${LDFLAGS} ${CXXFLAGS} -lboost_thread -lboost_system -lboost_filesystem -o $@
 	@echo	"$(OK_COLOR)$$EXP_STR$(NO_COLOR)"

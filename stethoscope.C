@@ -4,6 +4,8 @@
 /**
     Run this example with operaio.C (on the same machine or a different one)
     Here you will see how basic I/O with an arduino works via heartbeat proteins.
+    The led connected to pin 13 can be turned on and off
+    and readings will be taken from pin 0.
 */
 
 class ArduinoController : public Thing
