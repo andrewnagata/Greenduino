@@ -14,17 +14,18 @@ class App : public Thing
         // you can get this from the Arduino application or via command line
         // for OSX, in your terminal type "ls /dev/tty.*" to get a list of serial devices
         // Or, look in the output window for a list of devices
-        _greenduino = new Greenduino("ardy", "/dev/tty.usbserial-A9007MYl");
+        _greenduino = new Greenduino("ardy", "/dev/tty.usbserial-A900ceB2");
+        ParticipateInPool ("from-arduino");
     }
     
     void Blurt (BlurtEvent *e)
     {
-        if (Utters (e, "victory") )
+        if (Utters (e, "e") )
         {
             _greenduino -> sendDigital(13, ARD_HIGH);
         }
         
-        if (Utters (e, "elleshaped") )
+        if (Utters (e, "r") )
         {
             _greenduino -> sendDigital(13, ARD_LOW);
         }
@@ -40,7 +41,6 @@ class App : public Thing
             _greenduino -> sendDigitalPinMode(13, ARD_OUTPUT);
 
             _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG); //Analog sensor connected to pin A0 on Arduino
-            
             INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
         }
         

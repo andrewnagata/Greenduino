@@ -57,7 +57,7 @@ class ArduinoController : public Thing
                 first_heartbeat_heard = true;
               }
             if (HasIngest (p, "pin-values"))
-              { Trove <int64> s = TroveFromIngest <int64> (p, "pin-vals");
+              { Trove <int64> s = TroveFromIngest <int64> (p, "pin-values");
                 sensor_value -> SetString (ToStr (s . Nth(0)));
               }
             // set a timer that only goes off if we stop getting heartbeats
