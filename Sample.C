@@ -8,28 +8,24 @@ class App : public Thing
     Greenduino *_greenduino;
     
     App() : Thing()
-    {
-        ParticipateInPool("arduino");
-        
-        //Pass poolname along inside constructor
-        //can use setPoolName(name) later if desired
-        _greenduino = new Greenduino("arduino");
-        
-        // replace the string below with the serial port for your Arduino board
+    {   
+        // Pass a name for this arduino
+        // replace the second string below with the serial port for your Arduino board
         // you can get this from the Arduino application or via command line
         // for OSX, in your terminal type "ls /dev/tty.*" to get a list of serial devices
         // Or, look in the output window for a list of devices
-        _greenduino -> connect("/dev/tty.usbmodem1d11");
+        _greenduino = new Greenduino("ardy", "/dev/tty.usbserial-A900ceB2");
+        ParticipateInPool ("from-arduino");
     }
     
     void Blurt (BlurtEvent *e)
     {
-        if (Utters (e, "victory") )
+        if (Utters (e, "e") )
         {
             _greenduino -> sendDigital(13, ARD_HIGH);
         }
         
-        if (Utters (e, "elleshaped") )
+        if (Utters (e, "r") )
         {
             _greenduino -> sendDigital(13, ARD_LOW);
         }
@@ -43,9 +39,8 @@ class App : public Thing
             //Set up pin modes
             
             _greenduino -> sendDigitalPinMode(13, ARD_OUTPUT);
-            
+
             _greenduino -> sendAnalogPinReporting(0, ARD_ANALOG); //Analog sensor connected to pin A0 on Arduino
-            
             INFORM("firmata v " + ToStr(_greenduino->getMajorFirmwareVersion()) + "." + ToStr(_greenduino ->getMinorFirmwareVersion()));
         }
         
@@ -64,11 +59,6 @@ class App : public Thing
             int64 value = Ingest <int64> (p, "value");
             INFORM( "pin " + ToStr(pin) + " changed to " + ToStr(value) );
         }
-    }
-    
-    void Travail()
-    {
-        _greenduino -> update();
     }
 };
 

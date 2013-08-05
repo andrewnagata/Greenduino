@@ -162,22 +162,25 @@ class Greenduino : public Thing
 public:
     
     Greenduino();
-    Greenduino(const Str &poolname );
+    Greenduino(Str arduino_name, Str port_path, Str pool_path = "");
     
     virtual ~Greenduino();
     
     // --- setup functions
-    bool connect(string device, int baud = 57600);
+    bool connect(int baud = 57600);
     // opens a serial port connection to the arduino
     
     void disconnect();
     // closes the serial port connection
     
+    // greenhousey methods
+    virtual void Metabolize (const Protein &p);
+    virtual void Travail();
+
+
     bool isArduinoReady();
     
     void setUseDelay(bool bDelay);
-    
-    void setPoolName( const Str &poolname);
     
     void update();
     // polls data from the serial port, this has to be called periodically
@@ -322,14 +325,23 @@ public:
     int getServo(int pin);
     // returns the last set servo value for a pin if the pin has a servo attached
     
+    int getDigitalPinNum();
+
 protected:
     bool _initialized;
+    Str _arduino_name;
+    Str _port_path;
+    Str _pool_path;
     
     void init();
     
     void initPins();
     int _totalDigitalPins;
     
+    // greenhouse methods
+    void DepositDigitalPinChangedProtein (int64 pin, int64 value);
+    void DepositAnalogPinChangedProtein (int64 pin, int64 value);
+
     void sendDigitalPinReporting(int pin, int mode);
     // sets pin reporting to ARD_ON or ARD_OFF
     // enables / disables reporting for the pins port
@@ -348,8 +360,9 @@ protected:
     GSerial _port;
     int _portStatus;
     
-    // -- the Greenhouse poolname
-    Str _poolname;
+    // -- the Greenhouse pool names
+    Str _outputPoolName;
+    Str _inputPoolName;
     
     // --- history variables
     int _analogHistoryLength;
